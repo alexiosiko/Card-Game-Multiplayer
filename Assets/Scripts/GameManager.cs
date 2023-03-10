@@ -2,12 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using DG.Tweening;
 
 public class GameManager : NetworkBehaviour
 {
     [SerializeField] GameObject card;
-    [SerializeField] Sprite back;
     [SerializeField] Sprite[] faces;
+    [SerializeField] GameObject player;
     public byte[] cardIndexs = new byte[] {
          0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
         10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
@@ -16,17 +17,48 @@ public class GameManager : NetworkBehaviour
         40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
         50, 51, 52, 53
     };
-    public void InitializeGame()
+    void Start()
     {
-        AssignClientsToHands();
+        if (!IsHost)
+            return;
+
+        StartGame();
+    }
+    void StartGame()
+    {
+        CreatePlayersAndAssignClients();
+        AdjustHandsClientRpc();
+        AdjustCameraToPlayerClientRpc();
+
+        // yield return new WaitForSeconds(1);
+        
         Shuffle();
         StartCoroutine(Deal());
+        TurnManager.singleton.StartPlayerServerRpc();
     }
-    void AssignClientsToHands()
+    void CreatePlayersAndAssignClients()
     {
         var clientList = NetworkManager.Singleton.ConnectedClientsIds;
-        for (int i = 0; i < hands.childCount; i++)
+        for (int i = 0; i < clientList.Count; i++)
+        {
+            CreateHands();
             SetHandOwnerId(i, clientList[i]);
+        }
+    }
+    void CreateHands()
+    {
+        GameObject p = Instantiate<GameObject>(player, Vector3.zero, Quaternion.identity);
+        p.GetComponentInChildren<NetworkObject>().Spawn();
+        p.GetComponentInChildren<NetworkObject>().TrySetParent(players);
+    }
+    [ClientRpc]
+    void AdjustHandsClientRpc() {
+        float angle = 0;
+        for (int i = 0; i < players.childCount; i++) {
+            players.GetChild(i).position = new Vector3(3 * Mathf.Cos(angle), 3 * Mathf.Sin(angle), 0);
+            players.GetChild(i).eulerAngles = new Vector3(0, 0, angle * 180/Mathf.PI + 90);
+            angle += 2 * Mathf.PI / players.childCount;
+        }
     }
     void Shuffle()
     {
@@ -39,23 +71,105 @@ public class GameManager : NetworkBehaviour
             cardIndexs[k] = temp;
         }
     }
-    public float dealDelay = 0.2f;
+    float dealDelay = 0.15f;
     IEnumerator Deal()
     {
         int handIndex = 0;
         for (int cardIndex = 0; cardIndex < cardIndexs.Length; cardIndex++)
         {
-            print("index from server: " + cardIndex);
+            // print("index from server: " + cardIndex);
             DealCardsClientRpc(cardIndexs[cardIndex], handIndex);
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(dealDelay);
 
             // Remove cardIndex from list
 
             // Move to next player
             handIndex++;
-            if (handIndex >= hands.childCount)
+            if (handIndex >= players.childCount)
                 handIndex = 0;
         }
+    }
+    [ServerRpc(RequireOwnership = false)] public void MoveCardsToCenterServerRpc(string cardId)
+    {
+        MoveCardsToCenterClientRpc(cardId);  
+    }
+    [ClientRpc] void MoveCardsToCenterClientRpc(string cardId)
+    {
+        Transform card = FindCard(cardId);
+
+        if (card == null)
+        {
+            print($"Could not find cardId: {cardId} on clientId: {NetworkManager.Singleton.LocalClientId}");
+            return;
+        }
+
+        SpriteRenderer spriteRenderer = card.GetComponent<SpriteRenderer>();
+        
+        // Remove highlight from card and then hand.highlights
+        card.GetComponent<Card>().RemoveHighlight();
+        
+        // Disable collider
+        card.GetComponent<BoxCollider2D>().enabled = false;
+
+        // Change card
+        spriteRenderer.sprite = card.GetComponent<Card>().face;
+
+        // Set parent to center
+        card.parent = Center.singleton.transform;
+        card.GetComponent<Card>().RemoveHand();
+
+        // Get angle depending on Hand rotation
+        // float x = transform.parent.eulerAngles.z;
+        // x = Mathf.Cos(x * Mathf.PI/180); 
+        // float y = transform.parent.eulerAngles.z;
+        // y = Mathf.Sin(y * Mathf.PI/180);
+        
+        // Animations
+        card.DOKill();
+        card.DOMove(Vector3.zero, 0.2f);
+        // card.DOLocalMove(new Vector3(x * spacing * (cardCount - highlightedCount / 2), y * spacing * (cardCount - highlightedCount / 2), 0), 0.2f);
+
+        // Get random rotation
+        card.transform.localRotation = Quaternion.Euler(0, 0,  Random.Range(-20, 20));
+        
+        // Adjust sort layer
+        if (Center.singleton.recentCards.Count == 0)
+            spriteRenderer.sortingOrder = 0;
+        else
+            spriteRenderer.sortingOrder = Center.singleton.recentCards[Center.singleton.recentCards.Count - 1].GetComponent<SpriteRenderer>().sortingOrder + 1;
+
+        // Adjust ALL cards
+        GameManager.singleton.ResetAllCards();
+
+        Center.singleton.recentCards.Add(card);
+        Center.singleton.OrderCards();
+    }
+
+    Transform FindCard(string cardId)
+    {
+        // Find card
+        Card[] cards = FindObjectsOfType<Card>();
+
+        foreach (Card c in cards)
+            if (c.cardId == cardId)
+                return c.transform;
+
+        return null;
+    }
+    [ClientRpc] void AdjustCameraToPlayerClientRpc()
+    {
+        // Rotate camera to their hand
+        Hand[] hs = FindObjectsOfType<Hand>();
+        foreach (Hand h in hs)
+            h.RotateCameraToHand();
+
+        // Rotate the bell to their hand
+        Bell.singleton.RotateBellToHand();
+    }
+    public void ResetAllCards()
+    {
+        foreach (Transform player in GameObject.Find("Players").transform)
+            player.GetChild(0).GetComponent<Hand>().ResetCards();
     }
     [ClientRpc]
     public void DealCardsClientRpc(int cardIndex, int handIndex)
@@ -64,12 +178,10 @@ public class GameManager : NetworkBehaviour
         GameObject c = Instantiate<GameObject>(card, Vector3.zero, Quaternion.identity);
 
         // Set parent
-        c.transform.parent = hands.GetChild(handIndex); 
+        c.transform.parent = players.GetChild(handIndex).GetChild(0); 
         
-        print("index from client: " + cardIndex);
-
-        // Match card rotation to parent 
-        c.transform.rotation = c.transform.parent.rotation;
+        // Match card rotation to player 
+        c.transform.rotation = c.transform.parent.parent.rotation;
 
         // Assign face                // For some reason, cardIndexs ranges from [1, 52] and NOT [0, 51] ... ? So cardIndexs[i] - 1
         c.GetComponent<Card>().face = faces[cardIndex];
@@ -78,28 +190,24 @@ public class GameManager : NetworkBehaviour
         c.GetComponent<Card>().InitializeCard();
 
         // If client is owner of hand, then show face card
-        if (hands.GetChild(handIndex).GetComponent<NetworkObject>().IsOwner)
+        if (players.GetChild(handIndex).GetComponent<NetworkObject>().IsOwner)
             c.GetComponent<SpriteRenderer>().sprite = c.GetComponent<Card>().face;
-        else
-            c.GetComponent<SpriteRenderer>().sprite = back;
     
         // Tell hand to update their card's positions
-        hands.GetChild(handIndex).GetComponent<Hand>().ResetCards();
-
-        // c.transform.position = hands.GetChild(handIndex).transform.position;
+        players.GetChild(handIndex).GetComponentInChildren<Hand>().ResetCards();
     }
     void SetHandOwnerId(int i, ulong clientId)
     {
-        print($"{hands.GetChild(i).name} assignes to clientId: {clientId}");
-        NetworkObject netObj = hands.GetChild(i).GetComponent<NetworkObject>();
+        // print($"{hands.GetChild(i).name} assignes to clientId: {clientId}");
+        NetworkObject netObj = players.GetChild(i).GetComponent<NetworkObject>();
         if (netObj.OwnerClientId != clientId)
             netObj.ChangeOwnership(clientId);
     }
     void Awake()
     {
         singleton = this;
-        hands = GameObject.Find("Hands").transform;
+        players = GameObject.Find("Players").transform;
     }
-    Transform hands;
+    Transform players;
     public static GameManager singleton;
 }

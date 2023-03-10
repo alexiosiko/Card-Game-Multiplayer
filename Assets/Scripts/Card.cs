@@ -26,11 +26,11 @@ public class Card : MonoBehaviour
     }
     void OnMouseOver()
     {
-        if (!hand || !hand.IsOwner)
+        if (!hand || !hand.player.IsOwner)
             return;
 
         transform.DOKill();
-        transform.DOLocalMoveY(1, 0.2f);
+        transform.DOLocalMoveY(0.3f, 0.2f);
     }
     public void ToggleHighlight()
     {
@@ -56,14 +56,14 @@ public class Card : MonoBehaviour
     }
     void OnMouseExit()
     {    
-        if (!hand || !hand.IsOwner)
+        if (!hand || !hand.player.IsOwner)
             return;
 
         hand.ResetCards();
     }
     void OnMouseDrag()
     {
-        if (!hand || !hand.IsOwner)
+        if (!hand || !hand.player.IsOwner)
             return;
         
         // This is so stop any current tweens
@@ -76,7 +76,10 @@ public class Card : MonoBehaviour
     Vector3 mouseDragOffset;
     void OnMouseUp()
     {
-        if (!hand || !hand.IsOwner)
+        // If hand doesn't exist (When re-parented to center)
+        // If hand is not client owner
+        // If hand is not current turn
+        if (!hand || !hand.player.IsOwner)
             return;
 
         // Check if a click and not a highlight by calculating distance from mounseDown mouseUp
@@ -85,8 +88,9 @@ public class Card : MonoBehaviour
             return;
         }
 
-        // Check if CURRENT turn
-        // todo
+        // Check if current turn
+        if (!hand.isTurn)
+            return;
         
         RaycastHit2D[] hits = Physics2D.RaycastAll(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
         foreach (var hit in hits)
@@ -99,7 +103,7 @@ public class Card : MonoBehaviour
                 ToggleHighlight();
             }
             
-            if (Center.singleton.IsValidMove(hand.highlighted))
+            if (GameLogic.singleton.IsValidMove(hand.highlighted))
                 hand.MoveCardsToCenter();
             else
             {
@@ -119,7 +123,7 @@ public class Card : MonoBehaviour
     }
     void OnMouseDown()
     {
-        if (!hand || !hand.IsOwner)
+        if (!hand || !hand.player.IsOwner)
             return;
 
         // Get card click offset -> for OnMouseDrag()
