@@ -11,21 +11,28 @@ public class Player : NetworkBehaviour
     {
         if (!IsOwner || !hand.isTurn)
                 return;
+		if (hand.isLocalReady == false)
+			return;
 
         if (Input.GetKeyDown(KeyCode.P))
         {
+			SetPassLocal(true); // This is to set locally so show instant feedback for client 
+			hand.SetLocalReady(false);
             SetPassServerRpc(true);
             TurnManager.singleton.NextPlayerServerRpc();
         }
     }
     [ServerRpc] public void SetPassServerRpc(bool value)
     {
+		TurnManager.singleton.UnReadyPlayers();
         SetPassClientRpc(value);
     }
-
+	void SetPassLocal(bool value)
+	{
+		passTransform.gameObject.SetActive(value);
+	}
     [ClientRpc] public void SetPassClientRpc(bool value)
     {
-        print(value);
         passTransform.gameObject.SetActive(value);
         hand.SetPass(value);
     }

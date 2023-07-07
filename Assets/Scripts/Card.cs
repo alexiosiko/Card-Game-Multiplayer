@@ -82,11 +82,24 @@ public class Card : MonoBehaviour
         if (!hand || !hand.player.IsOwner)
             return;
 
+		if (hand.isLocalReady == false)
+		{
+			print("Is not local ready. This is to prevent double playing");
+			return;
+		}
+
         // Check if a click and not a highlight by calculating distance from mounseDown mouseUp
         if (Vector2.Distance(Camera.main.ScreenToWorldPoint(Input.mousePosition), mousePos) < 0.1f) {
             ToggleHighlight();
             return;
         }
+
+		// If not everyone is ready
+		if (TurnManager.singleton.everyoneIsReady.Value == false)
+		{
+			Debug.Log("Not everyone is ready!");
+			return;
+		}
 
         // Check if current turn
         if (!hand.isTurn)
@@ -99,12 +112,11 @@ public class Card : MonoBehaviour
                 continue;
 
             // If current card is not in list, then add to list
-            if (hand.highlighted.Contains(transform) == false) {
+            if (hand.highlighted.Contains(transform) == false)
                 ToggleHighlight();
-            }
             
             if (GameLogic.singleton.IsValidMove(hand.highlighted))
-                hand.MoveCardsToCenter();
+                hand.HandleMove();
             else
             {
                 hand.ResetCards();

@@ -6,6 +6,8 @@ using Unity.Netcode;
 
 public class TurnManager : NetworkBehaviour
 {
+	public NetworkVariable<int> nonReadyPlayersCount = new NetworkVariable<int>();
+	public NetworkVariable<bool> everyoneIsReady = new NetworkVariable<bool>(true);
     List<Transform> hands;
     int currentPlayerIndex = 0;
     void Update()
@@ -14,7 +16,6 @@ public class TurnManager : NetworkBehaviour
             NextPlayerServerRpc();
         if (Input.GetKeyDown(KeyCode.S))
             StartPlayerServerRpc();
-        
     }
     [ServerRpc(RequireOwnership = false)] public void StartPlayerServerRpc()
     {
@@ -41,6 +42,8 @@ public class TurnManager : NetworkBehaviour
     }
     [ServerRpc(RequireOwnership = false)] public void NextPlayerServerRpc()
     {
+		everyoneIsReady.Value = false;
+		nonReadyPlayersCount.Value = hands.Count;
         NextPlayerClientRpc();
     }
     int GetPassedCount(List<Transform> hands)
@@ -68,9 +71,9 @@ public class TurnManager : NetworkBehaviour
         // Ex:
         // 6 players
         // 5 passed -> true
+
         if (passedCount >= hands.Count - 1)
             Center.singleton.ClearTable();
-
 
         hands[currentPlayerIndex].GetComponent<Hand>().isTurn = false;
         
@@ -99,13 +102,33 @@ public class TurnManager : NetworkBehaviour
             Debug.Log("Finished!");
             this.enabled = false;
         }
+
+		// Tell server that this turn has passed for this client
+		TellServerThatThisClientIsReadyServerRPC();
     }
+	[ServerRpc(RequireOwnership = false)] void TellServerThatThisClientIsReadyServerRPC() 
+	{
+		nonReadyPlayersCount.Value--;
+		if (nonReadyPlayersCount.Value <= 0)
+			everyoneIsReady.Value = true;
+		
+		SetLocalReadyClientRPC();
+	}
+	[ClientRpc] void SetLocalReadyClientRPC()
+	{
+		foreach (Transform hand in hands)
+			hand.GetComponentInChildren<Hand>().SetLocalReady(true);
+	}
     public void GetHands()
     {
         hands = new List<Transform>();
         foreach (Transform player in GameObject.Find("Players").transform)
             hands.Add(player.GetChild(0));
     }
+	public void UnReadyPlayers()
+	{
+		nonReadyPlayersCount.Value = hands.Count;
+	}
     void Awake()
     {
         singleton = this;

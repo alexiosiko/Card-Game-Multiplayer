@@ -5,7 +5,6 @@ using Unity.Netcode;
 
 public class GameLogic : NetworkBehaviour
 {
-
     public bool IsValidMove(List<Transform> cards) {
         // Convert transforms to List<string> ids
         List<int> ids = new List<int>();
@@ -118,7 +117,6 @@ public class GameLogic : NetworkBehaviour
         // Value:  [1, 2, 3, 4, 5, 6,7 ,8 ,  9, 10, 11, 12, 13, 14   ]
         switch (str)
         {
-
             case "03": return 1;    // 3
             case "04": return 2;    // 4
             case "05": return 3;    // 5

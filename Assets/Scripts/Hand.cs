@@ -6,6 +6,7 @@ using DG.Tweening;
 public class Hand : MonoBehaviour
 {
     public List<Transform> highlighted;
+	public bool isLocalReady = true;
     [SerializeField] Color defaultColor = new Color(1,1,1,1);
     public float spacing = 0.2f;
     public bool isTurn = false; 
@@ -15,14 +16,14 @@ public class Hand : MonoBehaviour
     {
         return isPassed;
     }
+	public void SetLocalReady(bool value)
+	{
+		print("setting local");
+		isLocalReady = value;
+	}
     public void SetPass(bool value)
     {
         isPassed = value;
-    }
-
-    void Update()
-    {
-        
     }
     public void RotateCameraToHand()
     {
@@ -32,17 +33,26 @@ public class Hand : MonoBehaviour
         Vector3 pos = new Vector3(transform.position.x, transform.position.y, 0);
         Camera.main.transform.eulerAngles = transform.eulerAngles;
     }
+	public void HandleMove()
+	{
+		MoveCardsToCenter();
+		isLocalReady = false;
+	}
     public void MoveCardsToCenter()
     {
         // Deep copy this highlight
         List<Transform> storedHighlighted = new List<Transform>();
         foreach (Transform t in highlighted)
             storedHighlighted.Add(t);
+		
+		// ONLY move card to center on this client
+		foreach (Transform card in storedHighlighted)
+            GameManager.singleton.MoveCardsToCenterLocal(card.GetComponent<Card>().cardId);
 
         foreach (Transform card in storedHighlighted)
             GameManager.singleton.MoveCardsToCenterServerRpc(card.GetComponent<Card>().cardId);
 
-        // Next player turn
+		// Next player turn
         TurnManager.singleton.NextPlayerServerRpc();
     }
     

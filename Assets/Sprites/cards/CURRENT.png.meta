@@ -20,11 +20,12 @@ TextureImporter:
     externalNormalMap: 0
     heightScale: 0.25
     normalMapFilter: 0
+    flipGreenChannel: 0
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
-  ignoreMasterTextureLimit: 0
+  ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -63,6 +64,7 @@ TextureImporter:
   textureFormatSet: 0
   ignorePngGamma: 0
   applyGammaDecoding: 0
+  swizzle: 50462976
   cookieLightType: 0
   platformSettings:
   - serializedVersion: 3
@@ -75,6 +77,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -87,6 +90,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -99,6 +103,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -111,6 +116,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -663,7 +669,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: kk
+      name: kkd
       rect:
         serializedVersion: 2
         x: 504
@@ -1303,65 +1309,64 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      06d: -1593239832
-      10h: 976773204
-      kkh: -674185309
-      jo2: 297517906
-      kk: 827773609
-      10d: -1755436651
-      jjh: -924489947
-      02h: 1911281591
-      jjd: -1850699300
-      01h: -1823306419
-      02d: -1013199547
-      kkc: -734103129
-      09s: 1860654491
-      02s: -101897293
-      08h: 520582348
-      07s: -701883538
       01c: 398895491
+      01d: 59228567
+      01h: -1823306419
+      01s: 736936469
+      02c: 2146843954
+      02d: -1013199547
+      02h: 1911281591
+      02s: -101897293
+      03c: -650254028
+      03d: 369218767
+      03h: 1581014425
+      03s: 1895259917
+      04c: -486618007
+      04d: -1903789651
+      04h: 792523404
+      04s: 1680341980
+      05c: -421777216
       05d: -1999449917
+      05h: -1627605113
+      05s: 336174084
+      06c: 472219263
+      06d: -1593239832
+      06h: -1911584263
+      06s: -1417179533
+      07c: -41069211
+      07d: 487850790
+      07h: 52623805
+      07s: -701883538
+      08c: 1736980649
+      08d: -653505070
+      08h: 520582348
+      08s: -695968300
       09c: 597884118
       09d: -641028838
-      jo1: 178978397
-      06s: -1417179533
-      07d: 487850790
-      back: -1394667516
-      03c: -650254028
-      05c: -421777216
-      10c: -76126104
-      06c: 472219263
-      03s: 1895259917
-      kks: -311372483
-      08c: 1736980649
-      blank: -894849490
-      08s: -695968300
-      qqc: -2017721181
-      05h: -1627605113
-      04s: 1680341980
-      05s: 336174084
-      07h: 52623805
-      10s: 1099204259
       09h: 1293412258
-      07c: -41069211
-      06h: -1911584263
-      jjs: 527118205
-      08d: -653505070
-      qqs: 1206355041
-      qqd: 2098392448
-      03h: 1581014425
-      01s: 736936469
-      04h: 792523404
-      04d: -1903789651
-      02c: 2146843954
-      qqh: 1697042002
-      01d: 59228567
-      03d: 369218767
-      04c: -486618007
+      09s: 1860654491
+      10c: -76126104
+      10d: -1755436651
+      10h: 976773204
+      10s: 1099204259
+      back: -1394667516
+      blank: -894849490
       jjc: -1456837454
-  spritePackingTag: 
+      jjd: -1850699300
+      jjh: -924489947
+      jjs: 527118205
+      jo1: 178978397
+      jo2: 297517906
+      kkc: -734103129
+      kkd: 827773609
+      kkh: -674185309
+      kks: -311372483
+      qqc: -2017721181
+      qqd: 2098392448
+      qqh: 1697042002
+      qqs: 1206355041
+  mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  pSDShowRemoveMatteOption: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

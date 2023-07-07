@@ -14,10 +14,12 @@ public class ButtonManagerUI : NetworkBehaviour
     {
         connectButton.onClick.AddListener(() => {
             NetworkManager.Singleton.StartClient();
+			print("Starting client");
         });
     
         hostButton.onClick.AddListener(() => {
             NetworkManager.Singleton.StartHost();
+			print("Starting host");
         });
         quitButton.onClick.AddListener(() => {
             Application.Quit();

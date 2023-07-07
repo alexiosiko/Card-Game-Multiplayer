@@ -29,8 +29,6 @@ public class GameManager : NetworkBehaviour
         CreatePlayersAndAssignClients();
         AdjustHandsClientRpc();
         AdjustCameraToPlayerClientRpc();
-
-        // yield return new WaitForSeconds(1);
         
         Shuffle();
         StartCoroutine(Deal());
@@ -93,6 +91,57 @@ public class GameManager : NetworkBehaviour
     {
         MoveCardsToCenterClientRpc(cardId);  
     }
+	public void MoveCardsToCenterLocal(string cardId)
+	{
+		Transform card = FindCard(cardId);
+
+        if (card == null)
+        {
+            print($"Could not find cardId: {cardId} on clientId: {NetworkManager.Singleton.LocalClientId}");
+            return;
+        }
+
+        SpriteRenderer spriteRenderer = card.GetComponent<SpriteRenderer>();
+        
+        // Remove highlight from card and then hand.highlights
+        card.GetComponent<Card>().RemoveHighlight();
+        
+        // Disable collider
+        card.GetComponent<BoxCollider2D>().enabled = false;
+
+        // Change card
+        spriteRenderer.sprite = card.GetComponent<Card>().face;
+
+        // Set parent to center
+        card.parent = Center.singleton.transform;
+
+        // Get angle depending on Hand rotation
+        // float x = transform.parent.eulerAngles.z;
+        // x = Mathf.Cos(x * Mathf.PI/180); 
+        // float y = transform.parent.eulerAngles.z;
+        // y = Mathf.Sin(y * Mathf.PI/180);
+        
+        // Animations
+        card.DOKill();
+        card.DOMove(Vector3.zero, 0.2f);
+        // card.DOLocalMove(new Vector3(x * spacing * (cardCount - highlightedCount / 2), y * spacing * (cardCount - highlightedCount / 2), 0), 0.2f);
+
+        // Get random rotation
+        // card.transform.localRotation = Quaternion.Euler(0, 0,  Random.Range(-20, 20));
+        
+        // Adjust sort layer
+        if (Center.singleton.recentCards.Count == 0)
+            spriteRenderer.sortingOrder = 0;
+        else
+            spriteRenderer.sortingOrder = Center.singleton.recentCards[Center.singleton.recentCards.Count - 1].GetComponent<SpriteRenderer>().sortingOrder + 1;
+
+        // Adjust ALL cards
+        // GameManager.singleton.ResetAllCards();
+
+        // Center.singleton.recentCards.Add(card);
+        // Center.singleton.OrderCards();
+	}
+
     [ClientRpc] void MoveCardsToCenterClientRpc(string cardId)
     {
         Transform card = FindCard(cardId);
