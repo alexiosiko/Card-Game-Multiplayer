@@ -46,10 +46,11 @@ public class Hand : MonoBehaviour
             storedHighlighted.Add(t);
 		
 		// ONLY move card to center on this client
-		foreach (Transform card in storedHighlighted)
-            GameManager.singleton.MoveCardsToCenterLocal(card.GetComponent<Card>().cardId);
+		// foreach (Transform card in storedHighlighted)
+        //     GameManager.singleton.MoveCardsToCenterLocal(card.GetComponent<Card>().cardId);
+		// GameManager.singleton.testClientRpc("ah");
 
-        foreach (Transform card in storedHighlighted)
+        foreach (Transform card in storedHighlighted) 
             GameManager.singleton.MoveCardsToCenterServerRpc(card.GetComponent<Card>().cardId);
 
 		// Next player turn

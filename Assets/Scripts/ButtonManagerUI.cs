@@ -12,14 +12,18 @@ public class ButtonManagerUI : NetworkBehaviour
     [SerializeField] Button startButton;
     void Awake()
     {
-        connectButton.onClick.AddListener(() => {
-            NetworkManager.Singleton.StartClient();
-			print("Starting client");
-        });
-    
+		// NetworkManager.Singleton.OnClientConnectedCallback += (ulong id) => {
+		// 	print($"Client connected as ${id}");
+		// };
+		// NetworkManager.Singleton.OnServerStarted += () => {
+		// 	startButton.interactable = true;
+		// };
+        // connectButton.onClick.AddListener(() => {
+        //     NetworkManager.Singleton.StartClient();
+        // }); 
         hostButton.onClick.AddListener(() => {
-            NetworkManager.Singleton.StartHost();
-			print("Starting host");
+            SteamNetworkManager.Singleton.StartHost();
+			startButton.interactable = true;
         });
         quitButton.onClick.AddListener(() => {
             Application.Quit();

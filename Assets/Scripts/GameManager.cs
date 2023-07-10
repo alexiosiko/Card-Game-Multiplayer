@@ -47,15 +47,15 @@ public class GameManager : NetworkBehaviour
     {
         GameObject p = Instantiate<GameObject>(player, Vector3.zero, Quaternion.identity);
         p.GetComponentInChildren<NetworkObject>().Spawn();
-        p.GetComponentInChildren<NetworkObject>().TrySetParent(players);
+        p.GetComponentInChildren<NetworkObject>().TrySetParent(playersTransform);
     }
     [ClientRpc]
     void AdjustHandsClientRpc() {
         float angle = 0;
-        for (int i = 0; i < players.childCount; i++) {
-            players.GetChild(i).position = new Vector3(3 * Mathf.Cos(angle), 3 * Mathf.Sin(angle), 0);
-            players.GetChild(i).eulerAngles = new Vector3(0, 0, angle * 180/Mathf.PI + 90);
-            angle += 2 * Mathf.PI / players.childCount;
+        for (int i = 0; i < playersTransform.childCount; i++) {
+            playersTransform.GetChild(i).position = new Vector3(3 * Mathf.Cos(angle), 3 * Mathf.Sin(angle), 0);
+            playersTransform.GetChild(i).eulerAngles = new Vector3(0, 0, angle * 180/Mathf.PI + 90);
+            angle += 2 * Mathf.PI / playersTransform.childCount;
         }
     }
     void Shuffle()
@@ -83,7 +83,7 @@ public class GameManager : NetworkBehaviour
 
             // Move to next player
             handIndex++;
-            if (handIndex >= players.childCount)
+            if (handIndex >= playersTransform.childCount)
                 handIndex = 0;
         }
     }
@@ -141,7 +141,6 @@ public class GameManager : NetworkBehaviour
         // Center.singleton.recentCards.Add(card);
         // Center.singleton.OrderCards();
 	}
-
     [ClientRpc] void MoveCardsToCenterClientRpc(string cardId)
     {
         Transform card = FindCard(cardId);
@@ -227,7 +226,7 @@ public class GameManager : NetworkBehaviour
         GameObject c = Instantiate<GameObject>(card, Vector3.zero, Quaternion.identity);
 
         // Set parent
-        c.transform.parent = players.GetChild(handIndex).GetChild(0); 
+        c.transform.parent = playersTransform.GetChild(handIndex).GetChild(0); 
         
         // Match card rotation to player 
         c.transform.rotation = c.transform.parent.parent.rotation;
@@ -239,24 +238,24 @@ public class GameManager : NetworkBehaviour
         c.GetComponent<Card>().InitializeCard();
 
         // If client is owner of hand, then show face card
-        if (players.GetChild(handIndex).GetComponent<NetworkObject>().IsOwner)
+        if (playersTransform.GetChild(handIndex).GetComponent<NetworkObject>().IsOwner)
             c.GetComponent<SpriteRenderer>().sprite = c.GetComponent<Card>().face;
     
         // Tell hand to update their card's positions
-        players.GetChild(handIndex).GetComponentInChildren<Hand>().ResetCards();
+        playersTransform.GetChild(handIndex).GetComponentInChildren<Hand>().ResetCards();
     }
     void SetHandOwnerId(int i, ulong clientId)
     {
         // print($"{hands.GetChild(i).name} assignes to clientId: {clientId}");
-        NetworkObject netObj = players.GetChild(i).GetComponent<NetworkObject>();
+        NetworkObject netObj = playersTransform.GetChild(i).GetComponent<NetworkObject>();
         if (netObj.OwnerClientId != clientId)
             netObj.ChangeOwnership(clientId);
     }
     void Awake()
     {
         singleton = this;
-        players = GameObject.Find("Players").transform;
+        playersTransform = GameObject.Find("Players").transform;
     }
-    Transform players;
+    Transform playersTransform;
     public static GameManager singleton;
 }
