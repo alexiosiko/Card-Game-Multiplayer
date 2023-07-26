@@ -21,8 +21,20 @@ public class TurnManager : NetworkBehaviour
 	{
         hands = GetHands();
 
-		if (IsHost)
-			nonReadyPlayersCount.OnValueChanged += OnNonReadyPlayersCount;
+		if (!IsHost)
+			return;
+
+		nonReadyPlayersCount.OnValueChanged += OnNonReadyPlayersCount;
+		currentPlayerIndex.OnValueChanged += OnCurrentPlayerIndexChanged;
+		currentPlayerIndex.OnValueChanged += Bell.singleton.OnCurrentPlayerIndexChanged;
+
+	}
+	void OnCurrentPlayerIndexChanged(int prev, int current)
+	{
+		foreach (Hand hand in hands)
+			hand.isTurn.Value = false;
+		
+		Players.Singleton.transform.GetChild(current).GetComponentInChildren<Hand>().isTurn.Value = true;
 	}
 	void OnNonReadyPlayersCount(int before, int after)
 	{
@@ -37,20 +49,15 @@ public class TurnManager : NetworkBehaviour
 	}
     void StartPlayer()
     {
-        // Make all hands false
-        for (int i = 0; i < hands.Count; i++)
-            hands[i].isTurn.Value = false;
-
-        // Make hand[0] true
+        currentPlayerIndex.Value = 1;
         currentPlayerIndex.Value = 0;
-        hands[currentPlayerIndex.Value].isTurn.Value = true;
     }
     [ServerRpc(RequireOwnership = false)] public void NextPlayerServerRpc()
     {
 		// Check if gameover
 		if (IsGameOver())
 		{
-			GameMenuUI.Singleton.GameOverScreen();
+			GameOverUI.Singleton.GameOverScreen();
 			return;
 		}
 
@@ -60,9 +67,6 @@ public class TurnManager : NetworkBehaviour
 		// Find the next player with cards in hand and not passed
 		int nextPlayerIndex = (currentPlayerIndex.Value + 1) % hands.Count;
 
-		// Keep track of the player who started the round
-		int roundStartPlayer = currentPlayerIndex.Value;
-
 		while (activePlayers > 1)
 		{
 			Hand nextPlayerHand = hands[nextPlayerIndex];
@@ -70,16 +74,8 @@ public class TurnManager : NetworkBehaviour
 			// Check if the player has cards in hand and has not passed
 			if (IsPlayerActive(nextPlayerHand))
 			{
-				// Set the previous player's turn to false before moving to the next player
-				hands[currentPlayerIndex.Value].isTurn.Value = false;
-
-
 				// Update the current player index
 				currentPlayerIndex.Value = nextPlayerIndex;
-
-				// Set the new player's turn to true
-				hands[nextPlayerIndex].isTurn.Value = true;
-
 				return;
 			}
 
@@ -87,12 +83,17 @@ public class TurnManager : NetworkBehaviour
 			nextPlayerIndex = (nextPlayerIndex + 1) % hands.Count;
 		}
 
-		// Check if there is only one active player left (considering players who have not passed and still have cards)
-		if (activePlayers == 1 && currentPlayerIndex.Value != roundStartPlayer)
-		{
-			// Reset the table and start the next round
-			ClearTable();
-		}
+		ClearPasses();
+		ClearTable();
+		
+		// Update variable
+		currentPlayerIndex.Value = nextPlayerIndex;
+	}
+	void ClearPasses()
+	{
+		// Reset passes
+		foreach (Hand hand in hands)
+			hand.GetComponent<Hand>().isPassed.Value = false;
 	}
 	bool IsPlayerActive(Hand hand)
 	{
@@ -110,7 +111,7 @@ public class TurnManager : NetworkBehaviour
 	}
 	int GetPlayersPlayingCount()
 	{
-		return playersTransform.childCount;
+		return Players.Singleton.transform.childCount;
 	}
 	int GetPassedPlayersCount()
 	{
@@ -122,13 +123,8 @@ public class TurnManager : NetworkBehaviour
 	}
 	void ClearTable()
 	{
-		Debug.Log("table is resetting passes");
-		// Reset passes
-		foreach (Hand hand in hands)
-			hand.GetComponent<Hand>().isPassed.Value = false;
-        
 		// Clear recents
-		Center.singleton.ClearRecentsClientRpc();
+		Center.singleton.ClearTableClientRpc();
 	}
     int GetPassedCount(List<Transform> hands)
     {
@@ -171,7 +167,7 @@ public class TurnManager : NetworkBehaviour
     public List<Hand> GetHands()
     {
         List<Hand> handsList = new List<Hand>();
-		foreach (Transform handTransform in playersTransform)
+		foreach (Transform handTransform in Players.Singleton.transform)
             handsList.Add(handTransform.GetComponentInChildren<Hand>());
 		
 		return handsList;
@@ -182,9 +178,13 @@ public class TurnManager : NetworkBehaviour
 	}
     void Awake()
     {
-        singleton = this;
-		playersTransform = GameObject.Find("Players").transform;
+        Singleton = this;
     }
-    public static TurnManager singleton;
-	public Transform playersTransform;
+    public static TurnManager Singleton;
+	public override void OnDestroy()
+	{
+		nonReadyPlayersCount.OnValueChanged -= OnNonReadyPlayersCount;
+		currentPlayerIndex.OnValueChanged -= OnCurrentPlayerIndexChanged;
+		currentPlayerIndex.OnValueChanged -= Bell.singleton.OnCurrentPlayerIndexChanged;
+	}
 }

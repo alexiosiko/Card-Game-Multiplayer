@@ -26,11 +26,11 @@ public class Hand : NetworkBehaviour
             return;
         
         Vector3 pos = new Vector3(transform.position.x, transform.position.y, 0);
-        Camera.main.transform.eulerAngles = transform.eulerAngles;
+        Camera.main.transform.DORotate(transform.eulerAngles, 2f);
     }
 	public void HandleMove()
 	{
-		TurnManager.singleton.UnReadyPlayersServerRpc();
+		TurnManager.Singleton.UnReadyPlayersServerRpc();
 		Center.singleton.MoveCardsToCenter(highlighted);
 		isLocalReady = false;
 	}
@@ -70,6 +70,14 @@ public class Hand : NetworkBehaviour
             }
         }
     }
+	void Start()
+	{
+		isPassed.OnValueChanged += GetComponentInParent<Player>().OnIsPassedValueChanged;
+	}
+	public override void OnDestroy()
+	{
+		isPassed.OnValueChanged -= GetComponentInParent<Player>().OnIsPassedValueChanged;
+	}
     void Awake()
     {
         player = GetComponentInParent<Player>();

@@ -44,7 +44,7 @@ public class Deck : NetworkBehaviour
 			
             // Move to next player
             handIndex++;
-            if (handIndex >= playersTransform.childCount)
+            if (handIndex >= Players.Singleton.transform.childCount)
                 handIndex = 0;
         }
     }
@@ -55,7 +55,7 @@ public class Deck : NetworkBehaviour
         GameObject c = Instantiate<GameObject>(card, Vector3.zero, Quaternion.identity);
 
         // Set parent
-        c.transform.parent = playersTransform.GetChild(handIndex).GetChild(0); 
+        c.transform.parent = Players.Singleton.transform.GetChild(handIndex).GetChild(0); 
         
         // Match card rotation to player 
         c.transform.rotation = c.transform.parent.parent.rotation;
@@ -67,17 +67,15 @@ public class Deck : NetworkBehaviour
         c.GetComponent<Card>().InitializeCard();
 
         // If client is owner of hand, then show face card
-        if (playersTransform.GetChild(handIndex).GetComponent<NetworkObject>().IsOwner)
+        if (Players.Singleton.transform.GetChild(handIndex).GetComponent<NetworkObject>().IsOwner)
             c.GetComponent<SpriteRenderer>().sprite = c.GetComponent<Card>().face;
     
         // Tell hand to update their card's positions
-        playersTransform.GetChild(handIndex).GetComponentInChildren<Hand>().ResetCards();
+        Players.Singleton.transform.GetChild(handIndex).GetComponentInChildren<Hand>().ResetCards();
     }
 	void Awake()
 	{
 		Singleton = this;
-        playersTransform = GameObject.Find("Players").transform;
 	}
-	Transform playersTransform;
 	public static Deck Singleton;
 }

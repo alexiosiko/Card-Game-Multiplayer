@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using DG.Tweening;
+using Steamworks;
+using UnityEngine.UI;
+using TMPro;
 
 public class Player : NetworkBehaviour
 {
+	[SerializeField] TMP_Text nameText;
 	public NetworkVariable<int> winPosition = new NetworkVariable<int>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     [SerializeField] Transform passTransform;
     void Update()
@@ -22,7 +26,7 @@ public class Player : NetworkBehaviour
 	{
 		
 		hand.isPassed.Value = value;
-        TurnManager.singleton.NextPlayerServerRpc();
+        TurnManager.Singleton.NextPlayerServerRpc();
 	}
 	public void CheckWin()
 	{	
@@ -56,18 +60,16 @@ public class Player : NetworkBehaviour
     {
         hand = GetComponentInChildren<Hand>();
     }
-	void OnIsPassedValueChanged(bool before, bool after)
+	public void OnIsPassedValueChanged(bool before, bool after)
 	{
 		if (after == true)
 			SetPassLocal(true);
 		else
 			SetPassLocal(false);
-
-		print(after);
 	}
 	void Start()
 	{
-		hand.isPassed.OnValueChanged += OnIsPassedValueChanged;
+		nameText.name = Steamworks.SteamClient.Name;
 	}
     Hand hand;
 }

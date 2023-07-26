@@ -6,14 +6,6 @@ using DG.Tweening;
 public class Center : NetworkBehaviour
 {
     public List<Transform> recentCards = new List<Transform>();
-    [ClientRpc] public void ClearRecentsClientRpc()
-    {
-        recentCards.Clear();
-    }
-    [ServerRpc(RequireOwnership = false)] void ClearTableServerRpc()
-    {
-        ClearTableClientRpc();
-    }
     [ClientRpc] public void ClearTableClientRpc()
     {
         ClearTable();
@@ -98,7 +90,7 @@ public class Center : NetworkBehaviour
         Center.singleton.OrderCards();
 
 		// Tell server that this client is ready
-		TurnManager.singleton.TellServerThatThisClientIsReadyServerRPC();
+		TurnManager.Singleton.TellServerThatThisClientIsReadyServerRPC();
     }
 	public void MoveCardsToCenter(List<Transform> highlighted)
     {
@@ -117,7 +109,7 @@ public class Center : NetworkBehaviour
 
 
 		// Next player turn
-        TurnManager.singleton.NextPlayerServerRpc();
+        TurnManager.Singleton.NextPlayerServerRpc();
     }
 	public void MoveCardsToCenterLocal(string cardId)
 	{
@@ -191,9 +183,7 @@ public class Center : NetworkBehaviour
     {
         singleton = this;
         sideCardsTransform = GameObject.Find("SideCards").transform;
-        players = GameObject.Find("Players").transform;
     }
-    Transform players;
     Transform sideCardsTransform;
     public static Center singleton;
 }

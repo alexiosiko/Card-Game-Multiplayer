@@ -27,10 +27,18 @@ public class GameManager : NetworkBehaviour
 		StopAllTweensClientRpc();
 		RemoveAllCardsClientRpc();
 		AssignSeats();
+		AdjustHandsAndCameraToPlayerClientRpc();
 		ResetWinPositions();
+		ResetAllHandsClientRpc();
 		Deck.Singleton.ShuffleAndDeal();
 		Center.singleton.ClearTableClientRpc();
-		TurnManager.singleton.StartPlayerServerRpc();
+		TurnManager.Singleton.StartPlayerServerRpc();
+	}
+	[ClientRpc]	void ResetAllHandsClientRpc()
+	{
+		Hand[] hands = FindObjectsOfType<Hand>();
+		foreach (Hand hand in hands)
+			hand.highlighted.Clear();
 	}
 	void AssignSeats()
 	{
@@ -41,12 +49,12 @@ public class GameManager : NetworkBehaviour
 		for (int i = 0; i < players.Length; i++)
 			foreach (Player player in players)
 				if (player.winPosition.Value == i)
-					player.GetComponent<NetworkObject>().TrySetParent(playersTransform);
+					player.GetComponent<NetworkObject>().TrySetParent(Players.Singleton.transform);
 	
 		// If i missed anyone, just add them...
 		foreach (Player player in players)
 			if (player.transform.parent == null)
-				player.GetComponent<NetworkObject>().TrySetParent(playersTransform);
+				player.GetComponent<NetworkObject>().TrySetParent(Players.Singleton.transform);
 	}
 	void ResetWinPositions()
 	{
@@ -67,11 +75,10 @@ public class GameManager : NetworkBehaviour
     void StartGame()
     {
         CreatePlayersAndAssignClients();
-        AdjustHandsClientRpc();
-        AdjustCameraToPlayerClientRpc();
+        AdjustHandsAndCameraToPlayerClientRpc();
         
 		Deck.Singleton.ShuffleAndDeal();
-        TurnManager.singleton.StartPlayerServerRpc();
+        TurnManager.Singleton.StartPlayerServerRpc();
     }
     void CreatePlayersAndAssignClients()
     {
@@ -86,17 +93,18 @@ public class GameManager : NetworkBehaviour
     {
         GameObject p = Instantiate<GameObject>(player, Vector3.zero, Quaternion.identity);
         p.GetComponentInChildren<NetworkObject>().Spawn();
-        p.GetComponentInChildren<NetworkObject>().TrySetParent(playersTransform);
+        p.GetComponentInChildren<NetworkObject>().TrySetParent(Players.Singleton.transform);
     }
-    [ClientRpc] void AdjustHandsClientRpc() {
+    [ClientRpc] void AdjustHandsAndCameraToPlayerClientRpc() {
         float angle = 0;
-        for (int i = 0; i < playersTransform.childCount; i++) {
-            playersTransform.GetChild(i).position = new Vector3(3 * Mathf.Cos(angle), 3 * Mathf.Sin(angle), 0);
-            playersTransform.GetChild(i).eulerAngles = new Vector3(0, 0, angle * 180/Mathf.PI + 90);
-            angle += 2 * Mathf.PI / playersTransform.childCount;
+        for (int i = 0; i < Players.Singleton.transform.childCount; i++) {
+            Players.Singleton.transform.GetChild(i).DOMove(new Vector3(3 * Mathf.Cos(angle), 3 * Mathf.Sin(angle), 0), 1f);
+            Players.Singleton.transform.GetChild(i).DORotate(new Vector3(0, 0, angle * 180/Mathf.PI + 90), 1f);
+            angle += 2 * Mathf.PI / Players.Singleton.transform.childCount;
         }
+		Invoke("AdjustCameraToPlayer", 2f); // Wait for AdjustHandsClientRpc() to finish animation
     }
-    [ClientRpc] void AdjustCameraToPlayerClientRpc()
+    void AdjustCameraToPlayer()
     {
         // Rotate camera to their hand
         Hand[] hs = FindObjectsOfType<Hand>();
@@ -108,21 +116,19 @@ public class GameManager : NetworkBehaviour
     }
     public void ResetAllCards()
     {
-        foreach (Transform player in GameObject.Find("Players").transform)
+        foreach (Transform player in Players.Singleton.transform)
             player.GetChild(0).GetComponent<Hand>().ResetCards();
     }
     void SetHandOwnerId(int i, ulong clientId)
     {
         // print($"{hands.GetChild(i).name} assignes to clientId: {clientId}");
-        NetworkObject netObj = playersTransform.GetChild(i).GetComponent<NetworkObject>();
+        NetworkObject netObj = Players.Singleton.transform.GetChild(i).GetComponent<NetworkObject>();
         if (netObj.OwnerClientId != clientId)
             netObj.ChangeOwnership(clientId);
     }
     void Awake()
     {
         singleton = this;
-        playersTransform = GameObject.Find("Players").transform;
     }
-    Transform playersTransform;
     public static GameManager singleton;
 }

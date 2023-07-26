@@ -4,28 +4,20 @@ using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
 
-
-public class GameMenuUI : MonoBehaviour
+public class GameMenuUI : NetworkBehaviour
 {
-	[SerializeField] GameObject gameOverUI;
-	[SerializeField] Button restartButton;
-    [SerializeField] Button quitButton;
-    void Awake()
-    {
-		if (NetworkManager.Singleton.IsHost)
-			restartButton.interactable = true;
-
-
-		restartButton.onClick.AddListener(() => {
-			GameManager.singleton.RestartGame();
-			gameOverUI.SetActive(false);
-		});
-
-		Singleton = this;
-    }
-	public void GameOverScreen()
+	[SerializeField] GameObject GameMenuObject;
+	[SerializeField] Button gameMenuButton;
+	[SerializeField] Button resumeButton;
+	[SerializeField] Button disconnectButton;
+	void Awake()
 	{
-		gameOverUI.SetActive(true);
+		gameMenuButton.onClick.AddListener(() => GameMenuObject.SetActive(true));
+		resumeButton.onClick.AddListener(() => GameMenuObject.SetActive(false));
+
+		disconnectButton.onClick.AddListener(() => {
+			SteamNetworkManager.Singleton.Disconnect();
+			UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+		});
 	}
-	public static GameMenuUI Singleton;
 }

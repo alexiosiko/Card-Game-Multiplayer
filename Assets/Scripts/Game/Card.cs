@@ -94,7 +94,7 @@ public class Card : MonoBehaviour
         }
 
 		// If not everyone is ready
-		if (TurnManager.singleton.everyoneIsReady.Value == false)
+		if (TurnManager.Singleton.everyoneIsReady.Value == false)
 		{
 			Debug.Log("Not everyone is ready!");
 			return;

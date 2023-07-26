@@ -32,7 +32,7 @@ public class SteamNetworkManager : MonoBehaviour
 
 		currentLobby = await SteamMatchmaking.CreateLobbyAsync(maxMembers);
 	}
-	void StartClient(SteamId id)
+	public void StartClient(SteamId id)
 	{
 		NetworkManager.Singleton.OnClientConnectedCallback 	+= OnClientConnectedCallback;
 		NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
@@ -52,6 +52,7 @@ public class SteamNetworkManager : MonoBehaviour
 		
 		NetworkManager.Singleton.Shutdown();
 	}
+
 	#endregion
 	
 	#region Steam Callbacks
@@ -62,13 +63,19 @@ public class SteamNetworkManager : MonoBehaviour
 		NetworkManager.Singleton.OnClientConnectedCallback 	-= OnClientConnectedCallback;
 		NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
 	}
-	private void OnClientConnectedCallback(ulong clientId) => Debug.Log($"Client connected, clientId={clientId}");
-	private void OnServerStarted() => Debug.Log("Server has start!", this);
+	private void OnClientConnectedCallback(ulong clientId) => MainMenuUI.Singleton.LobbyLogClientRpc($"Client connected, clientId={clientId}");
+	private void OnServerStarted() => MainMenuUI.Singleton.LobbyLogClientRpc("Server has start!");
 	private void OnGameLobbyJoinRequested(Lobby lobby, SteamId id) => StartClient(id);
 	private void OnLobbyGameCreated(Lobby lobby, uint arg2, ushort arg3, SteamId id) {}
 	private void OnLobbyInvite(Friend friend, Lobby lobby) => Debug.Log($"You got an invite from {friend.Name}, this");
-	private void OnLobbyMemberLeave(Lobby lobby, Friend friend) {}
-	private void OnLobbyMemberJoined(Lobby lobby, Friend friend) {}
+	private void OnLobbyMemberLeave(Lobby lobby, Friend friend)
+	{
+		MainMenuUI.Singleton.LobbyLogClientRpc($"{friend.Name} left :(");
+	}
+	private void OnLobbyMemberJoined(Lobby lobby, Friend friend) 
+	{
+		MainMenuUI.Singleton.LobbyLogClientRpc($"{friend.Name} joined :D");
+	}
 	private void OnLobbyEntered(Lobby lobby)
 	{
 		if (NetworkManager.Singleton.IsHost)
@@ -80,15 +87,18 @@ public class SteamNetworkManager : MonoBehaviour
 	{
 		if (result != Result.OK)
 		{
-			Debug.Log($"Lobby cvounlt' be created, {result}", this);
+			Debug.Log($"Lobby couldn't be created, {result}", this);
 			return;
 		}
 
 		lobby.SetFriendsOnly();
-		lobby.SetData("Lobby name", "Cool lobby");
 		lobby.SetJoinable(true);
 
-		Debug.Log("Lobby has been created!", this);
+		Debug.Log(lobby.Id.Value + " " + lobby.Id.AccountId + " " + lobby.Id.IsValid);
+
+
+
+		MainMenuUI.Singleton.LobbyLog("Lobby created!");
 	}
 	#endregion
 	void OnDestroy()

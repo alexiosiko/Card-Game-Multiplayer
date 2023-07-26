@@ -7,7 +7,7 @@ public class Bell : MonoBehaviour
     float distance = 1f;
     public void AdjustBell(int playerIndex)
     {
-		Transform handTransform = playersTransform.GetChild(playerIndex).GetComponentInChildren<Hand>().transform;
+		Transform handTransform = Players.Singleton.transform.GetChild(playerIndex).GetComponentInChildren<Hand>().transform;
         // Get angle depending on Hand rotation
         float x = handTransform.eulerAngles.z;
         x = Mathf.Sin(x * Mathf.PI/180);
@@ -28,7 +28,7 @@ public class Bell : MonoBehaviour
             if (!hand.player.IsOwner)
                 continue;
             
-            transform.eulerAngles = hand.transform.eulerAngles;
+            transform.DORotate(hand.transform.eulerAngles, 1f);
         }
     }
     void RingBell()
@@ -39,18 +39,20 @@ public class Bell : MonoBehaviour
     {
         singleton = this;
         animator = GetComponent<Animator>();
-		playersTransform = GameObject.Find("Players").transform;
 	}
 	void Start()
 	{
-		TurnManager.singleton.currentPlayerIndex.OnValueChanged += OnCurrentPlayerIndexChanged;
+		TurnManager.Singleton.currentPlayerIndex.OnValueChanged += OnCurrentPlayerIndexChanged;
 	}
-	private void OnCurrentPlayerIndexChanged(int previousValue, int newValue)
+	void OnDestroy()
+	{
+		
+	}
+	public void OnCurrentPlayerIndexChanged(int previousValue, int newValue)
 	{
 		AdjustBell(newValue);
 	}
 
 	Animator animator;
     public static Bell singleton;
-	Transform playersTransform;
 }
