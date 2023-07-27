@@ -17,7 +17,7 @@ public class GameOverUI : MonoBehaviour
 
 
 		restartButton.onClick.AddListener(() => {
-			GameManager.singleton.RestartGame();
+			GameManager.Singleton.RestartGame();
 			gameOverUI.SetActive(false);
 		});
 

@@ -70,16 +70,13 @@ public class Hand : NetworkBehaviour
             }
         }
     }
-	void Start()
-	{
-		isPassed.OnValueChanged += GetComponentInParent<Player>().OnIsPassedValueChanged;
-	}
 	public override void OnDestroy()
 	{
-		isPassed.OnValueChanged -= GetComponentInParent<Player>().OnIsPassedValueChanged;
+		// isPassed.OnValueChanged -= GetComponentInParent<Player>().OnIsPassedValueChanged;
 	}
     void Awake()
     {
+		isPassed.OnValueChanged += GetComponentInParent<Player>().OnIsPassedValueChanged;
         player = GetComponentInParent<Player>();
     }
     public Player player;

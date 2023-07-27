@@ -7,6 +7,8 @@ public class Bell : MonoBehaviour
     float distance = 1f;
     public void AdjustBell(int playerIndex)
     {
+		Debug.Log(playerIndex);
+		
 		Transform handTransform = Players.Singleton.transform.GetChild(playerIndex).GetComponentInChildren<Hand>().transform;
         // Get angle depending on Hand rotation
         float x = handTransform.eulerAngles.z;
@@ -46,6 +48,7 @@ public class Bell : MonoBehaviour
 	}
 	void OnDestroy()
 	{
+		TurnManager.Singleton.currentPlayerIndex.OnValueChanged -= OnCurrentPlayerIndexChanged;
 		
 	}
 	public void OnCurrentPlayerIndexChanged(int previousValue, int newValue)

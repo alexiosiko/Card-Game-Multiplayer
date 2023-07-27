@@ -49,7 +49,8 @@ public class SteamNetworkManager : MonoBehaviour
 
 		if (NetworkManager.Singleton == null)
 			return;
-		
+
+		MainMenuUI.Singleton.LobbyLogClientRpc("Server has been shutdown!");		
 		NetworkManager.Singleton.Shutdown();
 	}
 

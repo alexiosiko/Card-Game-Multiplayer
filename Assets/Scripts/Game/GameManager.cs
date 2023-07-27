@@ -128,7 +128,7 @@ public class GameManager : NetworkBehaviour
     }
     void Awake()
     {
-        singleton = this;
+        Singleton = this;
     }
-    public static GameManager singleton;
+    public static GameManager Singleton;
 }

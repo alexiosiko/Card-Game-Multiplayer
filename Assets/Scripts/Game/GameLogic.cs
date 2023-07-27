@@ -2,12 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using System;
 
 public class GameLogic : NetworkBehaviour
 {
+	public static event EventHandler moveError;
+	public static event EventHandler moveSuccess;
+	public void CallMoveErrorEvent()
+	{
+		moveError?.Invoke(this, EventArgs.Empty);
+	}
+	public void CallMoveSuccessEvent()
+	{
+		moveSuccess?.Invoke(this, EventArgs.Empty);
+
+	}
     public bool IsValidMove(List<Transform> cards) {
-		return true;
-		
         // Convert transforms to List<string> ids
         List<int> ids = new List<int>();
         foreach (Transform card in cards)

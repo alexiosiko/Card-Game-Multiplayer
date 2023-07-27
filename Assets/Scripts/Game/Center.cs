@@ -83,7 +83,7 @@ public class Center : NetworkBehaviour
 		if (card == null) return;
         
         // Adjust ALL cards
-        GameManager.singleton.ResetAllCards();
+        GameManager.Singleton.ResetAllCards();
 
 		// Add card to center
         Center.singleton.recentCards.Add(card);

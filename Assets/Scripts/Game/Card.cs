@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using DG.Tweening;
+using System;
 
 public class Card : MonoBehaviour
 {
@@ -23,8 +24,13 @@ public class Card : MonoBehaviour
         // Face:   [3,4,5,6,7,8,9,10,J, Q, K, A, 2, JOKER]
         // Value:  [1,2,3,4,5,6,7,8 ,9,10,11,12,13, 14   ]
     }
+	void OnMouseEnter()
+	{
+		SoundManager.Singleton.PlayAudio(SoundManager.Singleton.cardHover);
+	}
     void OnMouseOver()
     {
+
         if (!hand || !hand.player.IsOwner)
             return;
 
@@ -34,12 +40,15 @@ public class Card : MonoBehaviour
     public void ToggleHighlight()
     {
         if (highlight == false) {
+			SoundManager.Singleton.PlayAudio(SoundManager.Singleton.cardHighlight);
+
             highlight = true;
             spriteRenderer.color = highlightColor;
             // Add to list
             GetComponentInParent<Hand>().highlighted.Add(transform);
         }
         else {
+			SoundManager.Singleton.PlayAudio(SoundManager.Singleton.cardUnhighlight);
             highlight = false;
             spriteRenderer.color = defaultColor;
             // Remove from list
@@ -48,6 +57,7 @@ public class Card : MonoBehaviour
     }
     public void RemoveHighlight()
     {
+		
         highlight = false;
         if (hand.highlighted.Contains(transform))
             hand.highlighted.Remove(transform);
@@ -111,11 +121,15 @@ public class Card : MonoBehaviour
                 ToggleHighlight();
             
             if (GameLogic.singleton.IsValidMove(hand.highlighted))
+			{
+				GameLogic.singleton.CallMoveSuccessEvent();
                 hand.HandleMove();
+			}
             else
             {
                 hand.ResetCards();
                 RemoveHighlight();
+				GameLogic.singleton.CallMoveErrorEvent();
             }
         }
     }

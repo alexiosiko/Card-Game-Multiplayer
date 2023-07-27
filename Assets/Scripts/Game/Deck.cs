@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using System;
 
 public class Deck : NetworkBehaviour
 {
+	public static event EventHandler cardDeal;
     public float dealDelay = 0.15f;
     [SerializeField] GameObject card;
     [SerializeField] Sprite[] faces;
@@ -27,7 +29,7 @@ public class Deck : NetworkBehaviour
         int n = cardIndexs.Length;
         while (n > 1) 
         {
-            int k = Random.Range(0, n--);
+            int k = UnityEngine.Random.Range(0, n--);
             byte temp = cardIndexs[n];
             cardIndexs[n] = cardIndexs[k];
             cardIndexs[k] = temp;
@@ -51,6 +53,9 @@ public class Deck : NetworkBehaviour
 	[ClientRpc]
     public void DealCardsClientRpc(int cardIndex, int handIndex)
     {
+		// Call event
+		cardDeal?.Invoke(this, EventArgs.Empty);
+
         // Create card
         GameObject c = Instantiate<GameObject>(card, Vector3.zero, Quaternion.identity);
 
