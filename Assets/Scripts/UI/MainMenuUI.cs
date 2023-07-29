@@ -55,7 +55,10 @@ public class MainMenuUI : NetworkBehaviour
             Application.Quit();
         });
         startButton.onClick.AddListener(() => {
-            NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single); 
+			if (NetworkManager.Singleton.ConnectedClientsList.Count <= 1)
+				LobbyLog("You need atleast 2 people to play");
+			else
+            	NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single); 
         });
 		creditsButton.onClick.AddListener(() => creditsGameObject.SetActive(true));
 		closeCreditsButton.onClick.AddListener(() => creditsGameObject.SetActive(false));
@@ -79,11 +82,7 @@ public class MainMenuUI : NetworkBehaviour
 	}
 	public override void OnDestroy()
 	{
-		if (!usingSteamNetworking)
-		{
-			NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
-			NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnectedCallback;	
-		}
+
 	}
 	public static MainMenuUI Singleton;
 }

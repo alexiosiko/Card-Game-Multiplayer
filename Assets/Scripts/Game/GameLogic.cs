@@ -8,6 +8,8 @@ public class GameLogic : NetworkBehaviour
 {
 	public static event EventHandler moveError;
 	public static event EventHandler moveSuccess;
+	public List<int> recentIds;
+	public List<int> ids;
 	public void CallMoveErrorEvent()
 	{
 		moveError?.Invoke(this, EventArgs.Empty);
@@ -15,18 +17,27 @@ public class GameLogic : NetworkBehaviour
 	public void CallMoveSuccessEvent()
 	{
 		moveSuccess?.Invoke(this, EventArgs.Empty);
-
 	}
     public bool IsValidMove(List<Transform> cards) {
         // Convert transforms to List<string> ids
-        List<int> ids = new List<int>();
+        ids = new List<int>();
         foreach (Transform card in cards)
             ids.Add(StrToVal(IgnoreSuit(card.GetComponent<Card>().cardId)));
 
         // Convert recentCards to List<string> recentIds
-        List<int> recentIds = new List<int>();
+        recentIds = new List<int>();
         foreach (Transform card in Center.singleton.recentCards)
             recentIds.Add(StrToVal(IgnoreSuit(card.GetComponent<Card>().cardId)));
+
+
+		Debug.Log("start");
+		foreach (var item in ids)
+			Debug.Log(item);
+		Debug.Log(":");
+		
+		foreach (var item in recentIds)
+			Debug.Log(item);
+		Debug.Log("finish");
 
         // Joker trump
         if (ids.Count == 1 && ids[0] == 14)
